@@ -48,39 +48,36 @@ async def video_pars(message: types.Message, state: FSMContext):
                 # print(format)
                 formats[format['label']] = format
 
-            try:
-                if '4KMP4' not in formats and 'HDMP4' not in formats:
-                    form_label = list(formats.keys())[-1]
-                    download_info_path = formats[form_label]['downloadAjaxUrl']
-                    async with session.get(f'https://www.storyblocks.com{download_info_path}') as resp:
-                        video_url = (await resp.json())['data']['downloadUrl']
+            if '4KMP4' not in formats and 'HDMP4' not in formats:
+                form_label = list(formats.keys())[-1]
+                download_info_path = formats[form_label]['downloadAjaxUrl']
+                async with session.get(f'https://www.storyblocks.com{download_info_path}') as resp:
+                    video_url = (await resp.json())['data']['downloadUrl']
 
-                    m_text = f'<b>Скачать видео:<b>\n1) Нажмите ПКМ\n2) Нажмите "Сохранить видео"\n\nИли перейдите по ссылке:\n1) <a href="{video_url}">{form_label[:2]} качество</a>\n\n<i>Данное видео недоступно в формате MP4</i>'
+                m_text = f'<b>Скачать видео:<b>\n1) Нажмите ПКМ\n2) Нажмите "Сохранить видео"\n\nИли перейдите по ссылке:\n1) <a href="{video_url}">{form_label[:2]} качество</a>\n\n<i>Данное видео недоступно в формате MP4</i>'
+            else:
+                download_info_path = formats['HDMP4']['downloadAjaxUrl']
+                async with session.get(f'https://www.storyblocks.com{download_info_path}') as resp:
+                    video_url = (await resp.json())['data']['downloadUrl']
+
+                if '4KMP4' in formats:
+                    async with session.get(f'https://www.storyblocks.com{formats["4KMP4"]["downloadAjaxUrl"]}') as resp:
+                        _4k_url = (await resp.json())['data']['downloadUrl']
                 else:
-                    download_info_path = formats['HDMP4']['downloadAjaxUrl']
-                    async with session.get(f'https://www.storyblocks.com{download_info_path}') as resp:
-                        video_url = (await resp.json())['data']['downloadUrl']
+                    _4k_url = None
 
-                    if '4KMP4' in formats:
-                        async with session.get(f'https://www.storyblocks.com{formats["4KMP4"]["downloadAjaxUrl"]}') as resp:
-                            _4k_url = (await resp.json())['data']['downloadUrl']
-                    else:
-                        _4k_url = None
+                m_text = f'<b>Скачать видео:<b>\n1) Нажмите ПКМ\n2) Нажмите "Сохранить видео"\n\nИли перейдите по ссылке:\n1) <a href="{video_url}">HD качество</a>\n'
 
-                    m_text = f'<b>Скачать видео:<b>\n1) Нажмите ПКМ\n2) Нажмите "Сохранить видео"\n\nИли перейдите по ссылке:\n1) <a href="{video_url}">HD качество</a>\n'
-
-                    if _4k_url:
-                        m_text += f'2) <a href="{_4k_url}">4K качество</a>'
-
-                try:
-                    await bot.send_file(user_id, video_url, caption=m_text)
-                except Exception as e:
-                    text_1 = '\n'.join(m_text.split('\n')[5:]) + '\n\n<i>Данное видео весит более 20 МБ, перейдите по ссылке чтобы скачать</i>'
-                    await bot.send_message(user_id, text_1)
+                if _4k_url:
+                    m_text += f'2) <a href="{_4k_url}">4K качество</a>'
+            await session.close()
+            try:
+                await bot.send_file(user_id, video_url, caption=m_text)
             except Exception as e:
-                await message.reply(f'{e!r}\n\nНе удалось скачать видео: {video_url}')
+                text_1 = '\n'.join(m_text.split('\n')[5:]) + '\n\n<i>Данное видео весит более 20 МБ, перейдите по ссылке чтобы скачать</i>'
+                await bot.send_message(user_id, text_1)
         except KeyError as e:
-            logger.exception(e)
+            logger.error(e)
             await message.reply(f'Необходимо возобновить подписку')
     else:
         await message.reply('Для начала введи кодовое слово!', reply_markup=add_delete_button())
