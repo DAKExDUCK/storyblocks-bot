@@ -1,7 +1,7 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
-from bot.functions.rights import is_user, secret_words, users
+from bot.functions.rights import is_user
 from bot.objects.logger import logger, print_msg
 from bot.keyboards.default import add_delete_button
 from bot.functions.tools import parse_cookie_json, get_info
@@ -12,18 +12,6 @@ async def start(message: types.Message, state: FSMContext):
     text = "Приветствую! Если ты ученик школы VideoPro, отправь кодовое слово"
     await message.reply(text, reply_markup=add_delete_button())
     await state.finish()
-
-
-@print_msg
-async def enter_secret(message: types.Message, state: FSMContext):
-    if message.text in secret_words:
-        users.append(message.from_user.id)
-        await message.reply('Вы получили доступ к боту\n' \
-            'Отправьте ссылку для скачки видео с сайта storyblocks',
-            reply_markup=add_delete_button())
-    else:
-        await message.reply('Неправильное кодовое слово. Попробуй еще раз',
-            reply_markup=add_delete_button())
 
 
 @print_msg
@@ -99,7 +87,6 @@ def register_handlers_default(dp: Dispatcher):
     dp.register_message_handler(start, commands="start", state="*")
     
     dp.register_message_handler(video_pars, lambda msg: 'storyblocks' in msg.text, content_types=['text'], state="*")
-    dp.register_message_handler(enter_secret, content_types=['text'], state="*")
 
 
     dp.register_callback_query_handler(
