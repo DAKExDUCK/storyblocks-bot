@@ -9,7 +9,7 @@ import dotenv
 
 from bot.handlers.default import register_handlers_default
 from bot.handlers.secondary import register_handlers_secondary
-from bot.handlers.logger import logger
+from bot.objects.logger import logger
 
 dotenv.load_dotenv()
 
@@ -17,10 +17,7 @@ dotenv.load_dotenv()
 async def set_commands(bot):
     commands = [
         BotCommand(command="/start", description="Начать"),
-        BotCommand(command="/help", description="Помощь"),
-        BotCommand(command="/stop", description="Остановить"),
-        BotCommand(command="/msg_to_admin", description="Написать сообщение админу"),
-        BotCommand(command="/get_logfile", description="Получить Logs (admin)"),
+        BotCommand(command="/get_logfile", description="Log file"),
     ]
     await bot.set_my_commands(commands)
 
@@ -28,7 +25,7 @@ async def set_commands(bot):
 async def main():
     logger.info("Configuring...")
     
-    bot = Bot(token=os.getenv('TOKEN'))
+    bot = Bot(token=os.getenv('TOKEN'), parse_mode='HTML')
     dp = Dispatcher(bot, storage=MemoryStorage())
 
     register_handlers_default(dp)
